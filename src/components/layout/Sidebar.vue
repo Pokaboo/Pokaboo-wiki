@@ -31,7 +31,7 @@ const promptState = ref({
   title: '',
   value: '',
   placeholder: '',
-  onConfirm: (val: string) => {}
+  onConfirm: (_val: string) => {}
 });
 
 const inputRef = ref<HTMLInputElement | null>(null);
@@ -69,18 +69,18 @@ const handleAddModule = () => {
 const handleAddCategory = (moduleId: string, e: Event) => {
   e.stopPropagation();
   openPrompt('新建分类', '分类名称...', (val) => {
-    const newCat = store.createCategory(moduleId, val);
+    store.createCategory(moduleId, val);
     expanded.value[moduleId] = true;
   });
 };
 
 const handleAddNote = (categoryId: string, moduleId: string, e: Event) => {
   e.stopPropagation();
-  openPrompt('新建笔记', '笔记标题...', (val) => {
-    const newNote = store.createNote(categoryId, val);
+  openPrompt('新建笔记', '笔记标题...', async (val) => {
+    const newNote = await store.createNote(categoryId, val);
     expanded.value[moduleId] = true;
     expanded.value[categoryId] = true;
-    router.push(`/note/${newNote.id}`);
+    if (newNote) router.push(`/note/${newNote.id}`);
   });
 };
 

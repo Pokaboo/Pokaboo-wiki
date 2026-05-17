@@ -72,8 +72,8 @@ const getRealHeatmapData = (year: string) => {
     }
   });
 
-  const date = +use.echarts?.number?.parseDate(year + '-01-01') || +new Date(year + '-01-01');
-  const end = +use.echarts?.number?.parseDate(+year + 1 + '-01-01') || +new Date(+year + 1 + '-01-01');
+  const date = new Date(year + '-01-01').getTime();
+  const end = new Date((parseInt(year) + 1) + '-01-01').getTime();
   const dayTime = 3600 * 24 * 1000;
   const data = [];
   
@@ -89,15 +89,13 @@ const getRealHeatmapData = (year: string) => {
 
 const heatmapOption = computed(() => {
   const textColor = isDark.value ? '#e5e7eb' : '#374151';
-  const splitLineColor = isDark.value ? '#374151' : '#e5e7eb';
   const itemBorderColor = isDark.value ? '#111827' : '#ffffff';
   
   return {
     tooltip: {
       position: 'top',
       formatter: function (p: any) {
-        const format = use.echarts?.time?.format || ((d: any, f: any) => p.data[0]);
-        return format(p.data[0], '{yyyy}-{MM}-{dd}', false) + ': ' + p.data[1] + ' 篇笔记';
+        return p.data[0] + ': ' + p.data[1] + ' 篇笔记';
       }
     },
     visualMap: {

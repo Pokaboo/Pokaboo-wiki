@@ -2,7 +2,7 @@
 import { useDark } from '@vueuse/core';
 
 // This initializes dark mode automatically from system or localStorage
-const isDark = useDark();
+useDark();
 </script>
 
 <template>

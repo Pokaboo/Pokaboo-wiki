@@ -3,7 +3,6 @@ import { ref } from 'vue';
 import { supabase } from '../utils/supabase';
 import { useRouter } from 'vue-router';
 import { useWikiStore } from '../store';
-import { Lock, Mail, Loader2 } from 'lucide-vue-next'; // Let's use remixicon instead of lucide
 import { useDark } from '@vueuse/core';
 
 const router = useRouter();
