@@ -70,7 +70,7 @@ export const useWikiStore = defineStore('wiki', {
       const randomColor = colors[Math.floor(Math.random() * colors.length)];
       
       const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return;
+      if (!userData.user) throw new Error('用户未登录');
 
       const order = this.modules.length + 1;
       const { data, error } = await supabase.from('modules').insert([
@@ -78,8 +78,8 @@ export const useWikiStore = defineStore('wiki', {
       ]).select().single();
 
       if (error) {
-        console.error(error);
-        return;
+        console.error('创建模块失败:', error);
+        throw new Error(error.message || '创建模块失败');
       }
       const newModule = { ...data, createdAt: data.created_at } as Module;
       this.modules.push(newModule);
@@ -87,7 +87,7 @@ export const useWikiStore = defineStore('wiki', {
     },
     async createCategory(moduleId: string, name: string) {
       const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return;
+      if (!userData.user) throw new Error('用户未登录');
 
       const modCats = this.categories.filter(c => c.moduleId === moduleId && !c.parentId);
       const order = modCats.length + 1;
@@ -97,8 +97,8 @@ export const useWikiStore = defineStore('wiki', {
       ]).select().single();
 
       if (error) {
-        console.error(error);
-        return;
+        console.error('创建分类失败:', error);
+        throw new Error(error.message || '创建分类失败');
       }
       const newCategory = { ...data, moduleId: data.module_id, parentId: data.parent_id } as Category;
       this.categories.push(newCategory);
@@ -106,7 +106,7 @@ export const useWikiStore = defineStore('wiki', {
     },
     async createNote(categoryId: string, title: string) {
       const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return;
+      if (!userData.user) throw new Error('用户未登录');
 
       const { data, error } = await supabase.from('notes').insert([
         { 
@@ -123,8 +123,8 @@ export const useWikiStore = defineStore('wiki', {
       ]).select().single();
 
       if (error) {
-        console.error(error);
-        return;
+        console.error('创建笔记失败:', error);
+        throw new Error(error.message || '创建笔记失败');
       }
       
       const newNote = {

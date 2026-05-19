@@ -25,24 +25,47 @@ const goToHome = () => {
   router.push('/');
 };
 
-// Custom Prompt State
+// 错误提示状态
+const toastState = ref({
+  show: false,
+  message: '',
+  type: 'error' as 'error' | 'success',
+});
+let toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * 显示 toast 提示
+ * @param message 提示信息
+ * @param type 提示类型
+ */
+const showToast = (message: string, type: 'error' | 'success' = 'error') => {
+  if (toastTimer) clearTimeout(toastTimer);
+  toastState.value = { show: true, message, type };
+  toastTimer = setTimeout(() => {
+    toastState.value.show = false;
+  }, 3000);
+};
+
+// NOTE: onConfirm 回调不能放在响应式对象中，Vue 3 的深度 reactive 代理会导致函数调用异常
 const promptState = ref({
   isOpen: false,
   title: '',
   value: '',
   placeholder: '',
-  onConfirm: (_val: string) => {}
 });
+
+// 将回调存储在普通变量中，避免被 Vue 的 Proxy 代理
+let promptCallback: ((val: string) => void) | null = null;
 
 const inputRef = ref<HTMLInputElement | null>(null);
 
 const openPrompt = (title: string, placeholder: string, onConfirm: (val: string) => void) => {
+  promptCallback = onConfirm;
   promptState.value = {
     isOpen: true,
     title,
     value: '',
     placeholder,
-    onConfirm
   };
   nextTick(() => {
     if (inputRef.value) inputRef.value.focus();
@@ -51,36 +74,51 @@ const openPrompt = (title: string, placeholder: string, onConfirm: (val: string)
 
 const closePrompt = () => {
   promptState.value.isOpen = false;
+  promptCallback = null;
 };
 
 const submitPrompt = () => {
-  if (promptState.value.value.trim()) {
-    promptState.value.onConfirm(promptState.value.value.trim());
+  if (promptState.value.value.trim() && promptCallback) {
+    promptCallback(promptState.value.value.trim());
   }
   closePrompt();
 };
 
 const handleAddModule = () => {
-  openPrompt('新建模块', '例如：数据库、面试题...', (val) => {
-    store.createModule(val);
+  openPrompt('新建模块', '例如：数据库、面试题...', async (val) => {
+    try {
+      await store.createModule(val);
+      showToast('模块创建成功', 'success');
+    } catch (err: any) {
+      showToast(err.message || '创建模块失败');
+    }
   });
 };
 
 const handleAddCategory = (moduleId: string, e: Event) => {
   e.stopPropagation();
-  openPrompt('新建分类', '分类名称...', (val) => {
-    store.createCategory(moduleId, val);
-    expanded.value[moduleId] = true;
+  openPrompt('新建分类', '分类名称...', async (val) => {
+    try {
+      await store.createCategory(moduleId, val);
+      expanded.value[moduleId] = true;
+      showToast('分类创建成功', 'success');
+    } catch (err: any) {
+      showToast(err.message || '创建分类失败');
+    }
   });
 };
 
 const handleAddNote = (categoryId: string, moduleId: string, e: Event) => {
   e.stopPropagation();
   openPrompt('新建笔记', '笔记标题...', async (val) => {
-    const newNote = await store.createNote(categoryId, val);
-    expanded.value[moduleId] = true;
-    expanded.value[categoryId] = true;
-    if (newNote) router.push(`/note/${newNote.id}`);
+    try {
+      const newNote = await store.createNote(categoryId, val);
+      expanded.value[moduleId] = true;
+      expanded.value[categoryId] = true;
+      if (newNote) router.push(`/note/${newNote.id}`);
+    } catch (err: any) {
+      showToast(err.message || '创建笔记失败');
+    }
   });
 };
 
@@ -224,5 +262,38 @@ const treeData = computed(() => {
         </div>
       </div>
     </div>
+
+    <!-- Toast 提示 -->
+    <Transition name="toast">
+      <div 
+        v-if="toastState.show" 
+        class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium backdrop-blur-sm"
+        :class="toastState.type === 'error' 
+          ? 'bg-red-500/90 text-white' 
+          : 'bg-green-500/90 text-white'"
+      >
+        <div class="flex items-center gap-2">
+          <i :class="toastState.type === 'error' ? 'ri-error-warning-line' : 'ri-check-line'" class="text-base"></i>
+          <span>{{ toastState.message }}</span>
+        </div>
+      </div>
+    </Transition>
   </aside>
 </template>
+
+<style scoped>
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s ease;
+}
+
+.toast-enter-from {
+  opacity: 0;
+  transform: translate(-50%, -1rem);
+}
+
+.toast-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -0.5rem);
+}
+</style>
