@@ -12,6 +12,15 @@ dist
 dist-ssr
 *.local
 
+# WorkBuddy
+.workbuddy
+
+# 例外：public/vditor/dist 是 Vditor 运行时静态资源（构建后需随站部署），
+# 虽位于名为 dist 的目录，但不能被上方 dist 规则忽略
+!public/vditor/
+!public/vditor/dist/
+!public/vditor/dist/**
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

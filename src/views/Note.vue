@@ -3,17 +3,16 @@ import { ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useWikiStore } from '../store';
 // @ts-ignore
-import { Editor, Viewer } from '@bytemd/vue-next';
+import { Viewer } from '@bytemd/vue-next';
 import gfm from '@bytemd/plugin-gfm';
 import highlight from '@bytemd/plugin-highlight';
 import math from '@bytemd/plugin-math';
 import 'highlight.js/styles/github-dark.css'; // You can use standard highlight css
 import 'katex/dist/katex.css';
-import { useDark } from '@vueuse/core';
+import MarkdownEditor from '../components/common/MarkdownEditor.vue';
 
 const route = useRoute();
 const store = useWikiStore();
-const isDark = useDark();
 
 const plugins = [
   gfm(),
@@ -64,94 +63,92 @@ const toggleEdit = () => {
   }
   isEditing.value = !isEditing.value;
 };
-
-const handleChange = (v: string) => {
-  editContent.value = v;
-};
 </script>
 
 <template>
-  <div class="flex-1 h-full flex flex-col bg-white dark:bg-gray-950 overflow-hidden" v-if="note">
-    <!-- Topbar (Breadcrumbs & Actions) -->
-    <header class="h-14 shrink-0 flex items-center justify-between px-6 border-b border-gray-200 dark:border-gray-800">
-      <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 gap-2">
-        <span class="hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer transition-colors">{{ module?.name }}</span>
+  <div class="flex-1 h-full flex flex-col bg-white dark:bg-surface-deep overflow-hidden" v-if="note">
+    <!-- Topbar：白底 + 细分割线 -->
+    <header class="h-14 shrink-0 flex items-center justify-between px-5 lg:px-7 border-b border-[var(--line)] bg-white dark:bg-surface-deep">
+      <div class="flex items-center text-[13px] text-gray-400 dark:text-slate-500 gap-1.5 min-w-0">
+        <span class="hover:text-[var(--accent)] cursor-pointer transition-colors whitespace-nowrap">{{ module?.name }}</span>
         <i class="ri-arrow-right-s-line text-[14px]"></i>
-        <span class="hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer transition-colors">{{ category?.name }}</span>
+        <span class="hover:text-[var(--accent)] cursor-pointer transition-colors whitespace-nowrap">{{ category?.name }}</span>
         <i class="ri-arrow-right-s-line text-[14px]"></i>
-        <span class="text-gray-900 dark:text-gray-100 font-medium truncate max-w-[200px]">{{ note.title }}</span>
+        <span class="text-gray-800 dark:text-gray-100 font-medium truncate">{{ note.title }}</span>
       </div>
-      
-      <div class="flex items-center gap-4">
-        <div class="text-xs text-gray-400 flex items-center gap-1">
+
+      <div class="flex items-center gap-4 shrink-0">
+        <div class="hidden sm:flex items-center gap-1 text-xs text-gray-400 dark:text-slate-500">
           <i class="ri-file-word-line text-[14px]"></i>
-          <span>{{ wordCount }} 字</span>
+          <span class="tabular-nums">{{ wordCount }} 字</span>
         </div>
-        <div class="text-xs text-gray-400 flex items-center gap-1 mr-2">
+        <div class="hidden md:flex items-center gap-1 text-xs text-gray-400 dark:text-slate-500 mr-1">
           <i class="ri-time-line text-[14px]"></i>
           <span>{{ new Date(note.updatedAt).toLocaleDateString() }}</span>
         </div>
-        <button 
+        <button
           @click="toggleEdit"
-          class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-          :class="isEditing ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'"
+          class="flex items-center gap-1.5 px-3.5 py-1.5 text-sm font-medium transition-colors active:scale-[0.98]"
+          :class="isEditing
+            ? 'text-white bg-[var(--accent)] hover:bg-[var(--accent-strong)] rounded-lg'
+            : 'n-btn-ghost text-gray-600 dark:text-gray-200'" 
         >
           <i :class="isEditing ? 'ri-save-line' : 'ri-edit-line'" class="text-[15px]"></i>
-          {{ isEditing ? 'Save' : 'Edit' }}
+          {{ isEditing ? '保存' : '编辑' }}
         </button>
       </div>
     </header>
 
-    <!-- Main Content Area -->
-    <div class="flex-1 overflow-y-auto w-full flex justify-center relative custom-scroll">
-      <div class="w-full max-w-4xl px-8 py-10 pb-32">
-        
+    <!-- Main Content Area：无卡纯排版，Notion 式阅读（宽版 900px） -->
+    <div class="flex-1 overflow-y-auto custom-scroll">
+      <div class="max-w-[900px] mx-auto px-8 lg:px-10 py-10 lg:py-12">
+
         <template v-if="!isEditing">
           <!-- Title -->
-          <h1 class="text-4xl font-extrabold text-gray-900 dark:text-gray-100 mb-6 tracking-tight leading-tight">
+          <h1 class="font-display text-[32px] lg:text-4xl font-bold text-gray-900 dark:text-gray-50 tracking-tight leading-tight">
             {{ note.title }}
           </h1>
-          
+
           <!-- Tags -->
-          <div class="flex flex-wrap gap-2 mb-10">
-            <span 
-              v-for="tag in note.tags" 
+          <div class="flex flex-wrap gap-2 mt-6 mb-10">
+            <span
+              v-for="tag in note.tags"
               :key="tag"
-              class="px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800/50"
+              class="px-2 py-0.5 rounded-md text-xs bg-[var(--accent-soft)] text-[var(--accent)]"
             >
               #{{ tag }}
             </span>
-            <span class="px-2.5 py-1 rounded-md text-xs font-medium bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 border border-green-100 dark:border-green-800/50">
-              难度: {{ note.difficulty }}
+            <span class="px-2 py-0.5 rounded-md text-xs bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-slate-400">
+              难度 {{ note.difficulty }}/5
             </span>
           </div>
 
           <!-- Viewer -->
-          <div class="prose prose-slate dark:prose-invert max-w-none prose-headings:font-semibold prose-a:text-blue-500 hover:prose-a:text-blue-600 prose-pre:bg-gray-50 dark:prose-pre:bg-[#0d1117] prose-pre:border prose-pre:border-gray-200 dark:prose-pre:border-gray-800 markdown-body">
+          <div class="prose prose-slate dark:prose-invert max-w-none prose-headings:font-semibold prose-a:text-[var(--accent)] hover:prose-a:text-[var(--accent-strong)] prose-code:before:content-none prose-code:after:content-none prose-code:text-[var(--accent)] dark:prose-code:text-[#a7aff5] prose-pre:bg-gray-50 dark:prose-pre:bg-[#0d1117] prose-pre:border prose-pre:border-gray-200 dark:prose-pre:border-gray-800 prose-pre:rounded-lg markdown-body">
             <Viewer :value="note.content" :plugins="plugins" />
           </div>
         </template>
 
         <template v-else>
-          <input 
+          <input
             v-model="editTitle"
-            class="w-full bg-transparent text-4xl font-extrabold text-gray-900 dark:text-gray-100 mb-4 tracking-tight leading-tight outline-none border-b border-transparent focus:border-blue-500 pb-2 transition-colors"
+            class="w-full bg-transparent font-display text-[32px] lg:text-4xl font-bold text-gray-900 dark:text-gray-50 tracking-tight leading-tight outline-none border-b border-transparent focus:border-[var(--accent)] pb-2 transition-colors"
             placeholder="Note Title"
           />
-          <div class="flex items-center gap-4 mb-6">
+          <div class="flex flex-wrap items-center gap-x-6 gap-y-3 mt-5 mb-6">
             <div class="flex items-center gap-2">
-              <span class="text-sm text-gray-500 dark:text-gray-400">标签:</span>
-              <input 
+              <span class="text-sm text-gray-400 dark:text-slate-500">标签</span>
+              <input
                 v-model="editTags"
-                class="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm px-3 py-1.5 rounded outline-none border border-transparent focus:border-blue-500 transition-colors w-64"
-                placeholder="例如: Vue3, 前端 (用逗号分隔)"
+                class="bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-gray-100 text-sm px-3 py-1.5 rounded-lg outline-none border border-transparent focus:border-[var(--accent)] transition-colors w-56"
+                placeholder="逗号分隔，如: Vue3, 前端"
               />
             </div>
             <div class="flex items-center gap-2">
-              <span class="text-sm text-gray-500 dark:text-gray-400">难度:</span>
-              <select 
+              <span class="text-sm text-gray-400 dark:text-slate-500">难度</span>
+              <select
                 v-model="editDifficulty"
-                class="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm px-3 py-1.5 rounded outline-none border border-transparent focus:border-blue-500 transition-colors"
+                class="bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-gray-100 text-sm px-3 py-1.5 rounded-lg outline-none border border-transparent focus:border-[var(--accent)] transition-colors cursor-pointer"
               >
                 <option :value="1">1</option>
                 <option :value="2">2</option>
@@ -161,40 +158,17 @@ const handleChange = (v: string) => {
               </select>
             </div>
           </div>
-          <div class="bytemd-wrapper" :class="{ 'dark': isDark }">
-            <Editor 
-              :value="editContent" 
-              :plugins="plugins" 
-              @change="handleChange" 
-              class="h-[600px] shadow-sm rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800"
-            />
+          <div class="rounded-xl overflow-hidden border border-[var(--line)]">
+            <MarkdownEditor v-model="editContent" mode="ir" placeholder="开始书写…" />
           </div>
         </template>
-        
+
       </div>
     </div>
   </div>
-  
-  <div v-else class="flex-1 flex items-center justify-center text-gray-400">
-    Note not found
+
+  <div v-else class="flex-1 flex flex-col items-center justify-center gap-3 bg-white dark:bg-surface-deep text-gray-400 dark:text-slate-500">
+    <i class="ri-file-search-line text-4xl text-gray-300 dark:text-slate-600"></i>
+    <span class="text-sm">笔记不存在或已被删除</span>
   </div>
 </template>
-
-<style>
-/* Override bytemd dark mode if needed, it uses CSS variables */
-.dark .bytemd {
-  background-color: #111827; /* gray-900 */
-  color: #f3f4f6;
-  border: none;
-}
-.dark .bytemd-toolbar {
-  background-color: #1f2937;
-  border-bottom: 1px solid #374151;
-}
-.dark .bytemd-toolbar-icon:hover {
-  background-color: #374151;
-}
-.dark .bytemd-preview {
-  background-color: #030712; /* gray-950 */
-}
-</style>

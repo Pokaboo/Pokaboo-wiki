@@ -12,9 +12,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex h-screen w-full bg-white dark:bg-gray-950 overflow-hidden text-gray-900 dark:text-gray-100 font-sans">
+  <div class="flex h-screen w-full overflow-hidden bg-surface-muted dark:bg-surface-deep text-gray-900 dark:text-gray-100 font-sans">
     <Sidebar />
-    <main class="flex-1 h-full overflow-hidden flex flex-col relative">
+
+    <main class="flex-1 h-full overflow-hidden flex flex-col">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
           <component :is="Component" />

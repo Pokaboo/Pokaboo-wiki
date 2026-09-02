@@ -4,6 +4,9 @@ import App from './App.vue';
 import router from './router';
 import './style.css';
 
+// Local hosted Inter Variable font (no external CDN dependency)
+import '@fontsource-variable/inter';
+
 // Import ByteMD CSS
 import 'bytemd/dist/index.css';
 
