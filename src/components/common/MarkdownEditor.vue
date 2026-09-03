@@ -73,7 +73,7 @@ const buildOptions = (): Record<string, unknown> => ({
   toolbarConfig: { pin: false },
   outline: { enable: false, position: 'right' },
   cache: { enable: false }, // 内容由应用层 store 持久化，禁用 localStorage 缓存防止跨笔记串稿
-  counter: { enable: false },
+  counter: { enable: true }, // 底部字数条，增强编辑器完成度
   preview: {
     delay: 200,
     hljs: {
@@ -166,9 +166,141 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* 融入外层卡片：去除 vditor 自带的独立边框，由外层 rounded 容器统一承担 */
+/* ===== Vditor 现代化美化定制 =====
+   融入外层卡片：去除 vditor 自带的独立边框，由外层 rounded 容器统一承担 */
+
+/* ---- 容器：保持无边框，避免双重描边 ---- */
 .markdown-editor :deep(.vditor) {
   border: none;
   border-radius: 0;
+  background: transparent;
+}
+
+/* ---- 工具栏：毛玻璃质感 + 按钮胶囊化 ---- */
+.markdown-editor :deep(.vditor-toolbar) {
+  background: rgba(248, 250, 252, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  padding: 4px 10px;
+}
+.markdown-editor :deep(.vditor-toolbar__btn) {
+  border-radius: 6px;
+  color: #475569;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.markdown-editor :deep(.vditor-toolbar__btn:hover) {
+  background: rgba(15, 23, 42, 0.06);
+  color: #0f172a;
+}
+/* 工具栏分隔线淡化 */
+.markdown-editor :deep(.vditor-toolbar__divider) {
+  height: 14px;
+  background: rgba(15, 23, 42, 0.1);
+}
+
+/* ---- 正文排版：Inter 字体 + 居中限宽 + 舒适行高（类 Typora 写作列）---- */
+.markdown-editor :deep(.vditor-reset) {
+  font-family: 'Inter Variable', -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: 15px;
+  line-height: 1.8;
+  color: #1e293b;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 24px 32px;
+}
+/* 标题层级：更克制的现代排版 */
+.markdown-editor :deep(.vditor-reset h1) {
+  font-size: 1.7em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 1.2em 0 0.6em;
+}
+.markdown-editor :deep(.vditor-reset h2) {
+  border-bottom: none;
+  font-weight: 600;
+  font-size: 1.4em;
+  margin: 1.2em 0 0.6em;
+}
+.markdown-editor :deep(.vditor-reset h3) {
+  font-weight: 600;
+  font-size: 1.2em;
+}
+/* 引用块：主题色左边线 + 淡底色 + 圆角 */
+.markdown-editor :deep(.vditor-reset blockquote) {
+  border-left: 3px solid #6366f1;
+  background: rgba(99, 102, 241, 0.04);
+  border-radius: 0 8px 8px 0;
+  padding: 8px 16px;
+  color: #475569;
+}
+/* 代码块：圆角容器 */
+.markdown-editor :deep(.vditor-reset pre) {
+  border-radius: 10px;
+}
+/* 分割线淡化 */
+.markdown-editor :deep(.vditor-reset hr) {
+  border-color: rgba(15, 23, 42, 0.08);
+}
+/* 链接颜色跟随主题色 */
+.markdown-editor :deep(.vditor-reset a) {
+  color: #4f46e5;
+  text-decoration-color: rgba(79, 70, 229, 0.3);
+}
+
+/* ---- 底部字数条：轻量化 ---- */
+.markdown-editor :deep(.vditor-counter) {
+  background: transparent;
+  color: #94a3b8;
+  font-size: 12px;
+  padding: 0 12px;
+}
+
+/* ---- 弹出面板（标题菜单/提示浮层）圆角与阴影统一 ---- */
+.markdown-editor :deep(.vditor-panel) {
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+}
+
+/* ---- 暗色主题适配（vditor 根节点自动追加 --dark 类）---- */
+.markdown-editor :deep(.vditor--dark) {
+  background: transparent;
+}
+.markdown-editor :deep(.vditor--dark .vditor-toolbar) {
+  background: rgba(15, 23, 42, 0.6);
+  border-bottom-color: rgba(148, 163, 184, 0.12);
+}
+.markdown-editor :deep(.vditor--dark .vditor-toolbar__btn) {
+  color: #94a3b8;
+}
+.markdown-editor :deep(.vditor--dark .vditor-toolbar__btn:hover) {
+  background: rgba(148, 163, 184, 0.15);
+  color: #e2e8f0;
+}
+.markdown-editor :deep(.vditor--dark .vditor-toolbar__divider) {
+  background: rgba(148, 163, 184, 0.2);
+}
+.markdown-editor :deep(.vditor--dark .vditor-reset) {
+  color: #e2e8f0;
+}
+.markdown-editor :deep(.vditor--dark .vditor-reset blockquote) {
+  border-left-color: #818cf8;
+  background: rgba(129, 140, 248, 0.08);
+  color: #94a3b8;
+}
+.markdown-editor :deep(.vditor--dark .vditor-reset hr) {
+  border-color: rgba(148, 163, 184, 0.16);
+}
+.markdown-editor :deep(.vditor--dark .vditor-reset a) {
+  color: #a5b4fc;
+  text-decoration-color: rgba(165, 180, 252, 0.3);
+}
+.markdown-editor :deep(.vditor--dark .vditor-counter) {
+  color: #64748b;
+}
+.markdown-editor :deep(.vditor--dark .vditor-panel) {
+  border-color: rgba(148, 163, 184, 0.14);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 </style>
