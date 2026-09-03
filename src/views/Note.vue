@@ -99,9 +99,12 @@ const toggleEdit = () => {
       </div>
     </header>
 
-    <!-- Main Content Area：无卡纯排版，Notion 式阅读（宽版 900px） -->
+    <!-- Main Content Area：无卡纯排版，Notion 式阅读（宽版 900px；编辑态放宽至 1100px） -->
     <div class="flex-1 overflow-y-auto custom-scroll">
-      <div class="max-w-[900px] mx-auto px-8 lg:px-10 py-10 lg:py-12">
+      <div
+        class="mx-auto px-8 lg:px-10 py-10 lg:py-12 transition-[max-width] duration-300"
+        :class="isEditing ? 'max-w-[1100px]' : 'max-w-[900px]'"
+      >
 
         <template v-if="!isEditing">
           <!-- Title -->

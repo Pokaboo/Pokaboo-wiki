@@ -169,8 +169,10 @@ onBeforeUnmount(() => {
 /* ===== Vditor 现代化美化定制 =====
    融入外层卡片：去除 vditor 自带的独立边框，由外层 rounded 容器统一承担 */
 
-/* ---- 容器：保持无边框，避免双重描边 ---- */
-.markdown-editor :deep(.vditor) {
+/* ---- 容器：保持无边框，避免双重描边 ----
+   vditor 会把 .vditor 类挂在宿主元素自身，:deep 后代选择器无法命中，
+   因此直接选中宿主类名本身 */
+.markdown-editor {
   border: none;
   border-radius: 0;
   background: transparent;
@@ -205,7 +207,7 @@ onBeforeUnmount(() => {
   font-size: 15px;
   line-height: 1.8;
   color: #1e293b;
-  max-width: 820px;
+  max-width: 960px;
   margin: 0 auto;
   padding: 24px 32px;
 }
@@ -263,44 +265,58 @@ onBeforeUnmount(() => {
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
 }
 
-/* ---- 暗色主题适配（vditor 根节点自动追加 --dark 类）---- */
-.markdown-editor :deep(.vditor--dark) {
-  background: transparent;
-}
-.markdown-editor :deep(.vditor--dark .vditor-toolbar) {
+/* ---- 暗色主题适配 ----
+   注意：vditor 会把 vditor--dark 类加在本组件根元素自身（而非子元素），
+   因此后代选择器 ".markdown-editor .vditor--dark xxx" 永远无法命中。
+   这里统一以 html.dark（useDark 切换的全局主题类）作为暗色开关，
+   选择器形如 ".dark .markdown-editor :deep(xxx)"，两种模式下均可靠生效。 */
+.dark .markdown-editor :deep(.vditor-toolbar) {
   background: rgba(15, 23, 42, 0.6);
   border-bottom-color: rgba(148, 163, 184, 0.12);
 }
-.markdown-editor :deep(.vditor--dark .vditor-toolbar__btn) {
+.dark .markdown-editor :deep(.vditor-toolbar__btn) {
   color: #94a3b8;
 }
-.markdown-editor :deep(.vditor--dark .vditor-toolbar__btn:hover) {
+.dark .markdown-editor :deep(.vditor-toolbar__btn:hover) {
   background: rgba(148, 163, 184, 0.15);
   color: #e2e8f0;
 }
-.markdown-editor :deep(.vditor--dark .vditor-toolbar__divider) {
+.dark .markdown-editor :deep(.vditor-toolbar__divider) {
   background: rgba(148, 163, 184, 0.2);
 }
-.markdown-editor :deep(.vditor--dark .vditor-reset) {
+.dark .markdown-editor :deep(.vditor-reset) {
   color: #e2e8f0;
 }
-.markdown-editor :deep(.vditor--dark .vditor-reset blockquote) {
+.dark .markdown-editor :deep(.vditor-reset blockquote) {
   border-left-color: #818cf8;
   background: rgba(129, 140, 248, 0.08);
   color: #94a3b8;
 }
-.markdown-editor :deep(.vditor--dark .vditor-reset hr) {
+.dark .markdown-editor :deep(.vditor-reset hr) {
   border-color: rgba(148, 163, 184, 0.16);
 }
-.markdown-editor :deep(.vditor--dark .vditor-reset a) {
+.dark .markdown-editor :deep(.vditor-reset a) {
   color: #a5b4fc;
   text-decoration-color: rgba(165, 180, 252, 0.3);
 }
-.markdown-editor :deep(.vditor--dark .vditor-counter) {
+.dark .markdown-editor :deep(.vditor-counter) {
   color: #64748b;
 }
-.markdown-editor :deep(.vditor--dark .vditor-panel) {
+.dark .markdown-editor :deep(.vditor-panel) {
   border-color: rgba(148, 163, 184, 0.14);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+/* 暗色下弱化行内代码的高亮蓝底，避免与文字对比失衡 */
+.dark .markdown-editor :deep(.vditor-reset code:not(.hljs):not(.highlight-chroma)) {
+  background: rgba(129, 140, 248, 0.16);
+  color: #c7d2fe;
+}
+/* 暗色下代码块容器与行号区域底色，融入深色面板 */
+.dark .markdown-editor :deep(.vditor-reset pre) {
+  background: #0f172a;
+}
+/* IR 模式标题占位标记（H1/H2 前缀）与源码标记使用暗色可读色 */
+.dark .markdown-editor :deep(.vditor-reset :is(h1, h2, h3, h4, h5, h6)) {
+  color: #e2e8f0;
 }
 </style>
